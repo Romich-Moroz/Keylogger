@@ -8,7 +8,7 @@
 class Logger {
 private:
 	std::wofstream output;
-	std::wstring GetTimestamp();
+	std::wstring GetTimestamp(std::wstring format);
 	int bufSize = 512;
 	int written = 0;
 public:
@@ -16,4 +16,5 @@ public:
 	~Logger();
 	void Append(std::wstring message);
 	void Append(wchar_t symbol);
+	void Flush();
 };

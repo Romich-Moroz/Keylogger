@@ -13,36 +13,57 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Keylogger">
+      <UniqueIdentifier>{7f384370-aa66-4da4-9778-75be914ad012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{82ebd25d-b48d-4a87-a365-9a96f9a8093a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Networking">
+      <UniqueIdentifier>{663a085b-e75c-4b01-8e8c-6154658ee66b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ErrorHandling">
+      <UniqueIdentifier>{5f3cba9d-1dd4-4ae5-9297-27cdd3967e9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Replication">
+      <UniqueIdentifier>{0f12e662-3ea7-4cd5-999c-89ff58ea3957}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Keylogger.cpp">
+      <Filter>Keylogger</Filter>
+    </ClCompile>
     <ClCompile Include="Logger.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Logger</Filter>
     </ClCompile>
     <ClCompile Include="Networking.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Networking</Filter>
     </ClCompile>
     <ClCompile Include="ErrorHandling.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>ErrorHandling</Filter>
     </ClCompile>
-    <ClCompile Include="Keylogger.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Replication.cpp">
+      <Filter>Replication</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Keylogger.h">
+      <Filter>Keylogger</Filter>
+    </ClInclude>
     <ClInclude Include="Logger.h">
-      <Filter>Header Files</Filter>
+      <Filter>Logger</Filter>
     </ClInclude>
     <ClInclude Include="Networking.h">
-      <Filter>Header Files</Filter>
+      <Filter>Networking</Filter>
     </ClInclude>
     <ClInclude Include="ErrorHandling.h">
-      <Filter>Header Files</Filter>
+      <Filter>ErrorHandling</Filter>
     </ClInclude>
-    <ClInclude Include="Keylogger.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Replication.h">
+      <Filter>Replication</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
