@@ -16,14 +16,14 @@
     <Filter Include="Keylogger">
       <UniqueIdentifier>{7f384370-aa66-4da4-9778-75be914ad012}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ErrorHandling">
-      <UniqueIdentifier>{5f3cba9d-1dd4-4ae5-9297-27cdd3967e9e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Replication">
       <UniqueIdentifier>{0f12e662-3ea7-4cd5-999c-89ff58ea3957}</UniqueIdentifier>
     </Filter>
     <Filter Include="Filtering">
       <UniqueIdentifier>{33f6e030-9494-4683-85f7-4cd2d636ee63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Networking">
+      <UniqueIdentifier>{7b70e323-0ab3-4004-ac06-f380d2753947}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,28 +33,28 @@
     <ClCompile Include="Keylogger.cpp">
       <Filter>Keylogger</Filter>
     </ClCompile>
-    <ClCompile Include="ErrorHandling.cpp">
-      <Filter>ErrorHandling</Filter>
-    </ClCompile>
     <ClCompile Include="Replication.cpp">
       <Filter>Replication</Filter>
     </ClCompile>
     <ClCompile Include="Filtering.cpp">
       <Filter>Filtering</Filter>
     </ClCompile>
+    <ClCompile Include="Networking.cpp">
+      <Filter>Networking</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Keylogger.h">
       <Filter>Keylogger</Filter>
-    </ClInclude>
-    <ClInclude Include="ErrorHandling.h">
-      <Filter>ErrorHandling</Filter>
     </ClInclude>
     <ClInclude Include="Replication.h">
       <Filter>Replication</Filter>
     </ClInclude>
     <ClInclude Include="Filtering.h">
       <Filter>Filtering</Filter>
+    </ClInclude>
+    <ClInclude Include="Networking.h">
+      <Filter>Networking</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

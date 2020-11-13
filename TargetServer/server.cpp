@@ -4,7 +4,8 @@
 #include <process.h>
 #include <vector>
 #include <sstream>
-#include "../Logger/Logger.h"
+#include <iostream>
+#include "Logger.h"
 
 #pragma comment (lib, "Ws2_32.lib")
 
@@ -91,7 +92,10 @@ int wmain(int argc, wchar_t* argv[]) {
 	SOCKET serverListenSocket = InitServer(argv[1], maxConnections);
 
 	std::vector<HANDLE> threads;
+	std::wcout << L"Listening for connections..." << std::endl;
+
 	while (SOCKET clientSocket = accept(serverListenSocket,NULL,NULL) != INVALID_SOCKET) {
+		std::wcout << L"Client connected" << std::endl;
 		threads.push_back((HANDLE)_beginthreadex(0, 0, ClientHandler, (void*)clientSocket, 0, 0));
 	}
 

