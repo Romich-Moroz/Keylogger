@@ -14,8 +14,6 @@ std::wstring Logger::GetTimestamp(std::wstring format) {
 
 Logger::Logger(std::wstring directory = L"", std::wstring filename = L"", int bufSize = 512) {	
 	this->bufSize = bufSize;
-	if (!directory.empty())
-		directory.append(L"\\");
 	filename = filename.empty() ? GetTimestamp(L"%Y-%m-%d") + L".log" : filename;
 	this->output.open(directory.append(filename), std::ofstream::out | std::ofstream::app);
 }
@@ -27,7 +25,7 @@ Logger::~Logger() {
 
 void Logger::Append(std::wstring message) {
 	this->output << message;
-	this->written += message.length();
+	this->written += (int)message.length();
 	if (this->written >= bufSize)
 		Flush();		
 }
