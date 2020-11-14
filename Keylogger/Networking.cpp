@@ -1,7 +1,7 @@
 #include "Networking.h"
 
-TcpClient::TcpClient(int bufSize) {
-	this->bufSize = bufSize;
+TcpClient::TcpClient(int flushThreshold) {
+	this->flushThreshold = flushThreshold;
 }
 
 bool TcpClient::Connect(std::wstring ip, std::wstring port) {
@@ -54,32 +54,33 @@ void TcpClient::Disconnect() {
 }
 
 bool TcpClient::Send(std::wstring data) {
-	for (int i = 0; i = (int)data.size(); i++) {
-		this->output[written + i] = data[i];
-	}
+	this->output << data;
 	written += (int)data.length();
-	if (written >= bufSize)
+	if (written >= flushThreshold - 1)
 		return Flush();
 	return true;
 }
 
 bool TcpClient::Send(wchar_t symbol)
 {
-	this->output[written] = symbol;
+	this->output << symbol;
 	written++;
-	if (written >= bufSize)
+	if (written >= flushThreshold - 1)
 		return Flush();
 	return true;
 }
 
 bool TcpClient::Flush()
 {
-	int error = send(this->connection, (char*)this->output.c_str(), this->output.size() * sizeof(wchar_t), 0);
-	if (error == SOCKET_ERROR) {
+	this->output << L"\0";
+	written++;
+	int sendBytes = send(this->connection, (char*)this->output.str().c_str(), written * sizeof(wchar_t), 0);
+	if (sendBytes == SOCKET_ERROR) {
 		closesocket(this->connection);
 		WSACleanup();
 		return false;
 	}
 	written = 0;
+	output.str(L"");
 	return true;
 }

@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <windows.h>
 
 class Logger {
 private:

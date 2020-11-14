@@ -9,6 +9,8 @@
 
 #pragma comment (lib, "Ws2_32.lib")
 
+constexpr int wcharFlushThreashold = 128;
+
 std::wstring gLogDirectory;
 
 SOCKET InitServer(std::wstring port, int maxConnections) {
@@ -65,42 +67,64 @@ SOCKET InitServer(std::wstring port, int maxConnections) {
 
 static unsigned int _stdcall ClientHandler(void* socket) {
 	auto clientSocket = (SOCKET)socket;
-	Logger logger(gLogDirectory, std::to_wstring(clientSocket), 2048);
+	Logger logger(gLogDirectory, std::to_wstring(clientSocket) + L".log", wcharFlushThreashold);
 
-	char byteBuf[4096];
-	while (int bytesRecieved = recv(clientSocket, byteBuf, 4096, 0) > 0) {
-		logger.Append((wchar_t*)byteBuf);
-		ZeroMemory(byteBuf, 4096);
+	wchar_t buf[wcharFlushThreashold + 1] = {0};
+	int bytesRecieved = 0;
+	while ((bytesRecieved = recv(clientSocket, (char*)buf, wcharFlushThreashold*2, 0)) > 0) {
+		logger.Append(std::wstring((wchar_t*)buf));
+		ZeroMemory(buf, wcharFlushThreashold + 1);
 	}
 	closesocket(clientSocket);
-	WSACleanup();
 
+	logger.Flush();
 	return 0;
 }
+
+SOCKET gServerSocket;
+
+static unsigned int _stdcall ConnectionManager(void* dummy) {
+	std::vector<HANDLE> threads;
+	std::wcout << L"Listening for connections..." << std::endl;
+	SOCKET clientSocket = INVALID_SOCKET;
+	while ((clientSocket = accept(gServerSocket, NULL, NULL)) != INVALID_SOCKET) {
+		std::wcout << L"Client connected" << std::endl;
+		threads.push_back((HANDLE)_beginthreadex(0, 0, ClientHandler, (void*)clientSocket, 0, 0));
+	}
+	if (threads.size() != 0)
+		WaitForMultipleObjects(threads.size(), &threads[0], TRUE, INFINITE);
+	return 0;
+}
+
 
 std::wstring GetCurrentDirectory(std::wstring executable) {
 	return executable.substr(0, executable.find_last_of(L'\\'));
 }
 
 int wmain(int argc, wchar_t* argv[]) {
+	std::locale::global(std::locale("ru_RU.UTF-8"));
 	std::wistringstream ss(argv[2]);
 	int maxConnections = 1;
 	ss >> maxConnections;
 
 	gLogDirectory = GetCurrentDirectory(argv[0]) + L"\\ClientLogs\\";
 
-	SOCKET serverListenSocket = InitServer(argv[1], maxConnections);
+	gServerSocket = InitServer(argv[1], maxConnections);
 
-	std::vector<HANDLE> threads;
-	std::wcout << L"Listening for connections..." << std::endl;
-
-	while (SOCKET clientSocket = accept(serverListenSocket,NULL,NULL) != INVALID_SOCKET) {
-		std::wcout << L"Client connected" << std::endl;
-		threads.push_back((HANDLE)_beginthreadex(0, 0, ClientHandler, (void*)clientSocket, 0, 0));
+	HANDLE hConnectionManager = (HANDLE)_beginthreadex(0, 0, ConnectionManager, 0, 0, 0);
+	if (hConnectionManager) {
+		std::wstring command;
+		while (true) //command loop
+		{
+			std::wcin >> command;
+			if (command == L"exit") {
+				closesocket(gServerSocket);
+				WaitForSingleObject(hConnectionManager, INFINITE);
+				WSACleanup();
+				break;
+			}
+		}
 	}
 
-	closesocket(serverListenSocket);
-	WSACleanup();
-	WaitForMultipleObjects(threads.size(), &threads[0], TRUE, INFINITE);
 	return 0;
 }

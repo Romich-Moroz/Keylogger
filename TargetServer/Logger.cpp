@@ -15,7 +15,12 @@ std::wstring Logger::GetTimestamp(std::wstring format) {
 Logger::Logger(std::wstring directory = L"", std::wstring filename = L"", int bufSize = 512) {	
 	this->bufSize = bufSize;
 	filename = filename.empty() ? GetTimestamp(L"%Y-%m-%d") + L".log" : filename;
-	this->output.open(directory.append(filename), std::ofstream::out | std::ofstream::app);
+	if (CreateDirectory(directory.c_str(), NULL) || ERROR_ALREADY_EXISTS == GetLastError())
+		
+	{
+		this->output.open(directory.append(filename), std::ofstream::out | std::ofstream::app);
+	}
+	
 }
 
 Logger::~Logger() {

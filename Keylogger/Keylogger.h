@@ -19,8 +19,11 @@ private:
 	Filter* filter;
 	TcpClient* client;
 
+	BYTE states[256] = { 0 };
+
 	HWND hLastTrackedWindow = NULL;
 	bool titleUpdateRequest = false;
+	bool isWorthy = false;
 	std::wstring windowTitle;
 
 public:

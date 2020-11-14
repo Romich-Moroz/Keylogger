@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <sstream>
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 
@@ -9,12 +10,12 @@
 class TcpClient {
 private:
 	SOCKET connection = INVALID_SOCKET;
-	int bufSize = 512;
+	int flushThreshold = 512;
 	int written = 0;
-	std::wstring output;
+	std::wstringstream output;
 
 public:
-	TcpClient(int bufSize);
+	TcpClient(int flushThreshold);
 	bool Connect(std::wstring ip, std::wstring port);
 	void Disconnect();
 	bool Send(std::wstring data);
