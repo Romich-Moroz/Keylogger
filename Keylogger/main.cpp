@@ -9,10 +9,9 @@ std::vector<std::wstring> filters = { L"Discord", L"VK", L"Google", L"Yandex", L
 int wmain(int argc, wchar_t* argv[]) {
 	std::locale::global(std::locale("ru_RU.UTF-8"));
 
-	auto client = new TcpClient(128);
+	auto client = new TcpClient(argv[1], argv[2], 128);
 	
-
-	while(!client->Connect(argv[1], argv[2])) {
+	while(!client->Connect(L"",L"")) {
 		Sleep(1000);
 	}
 

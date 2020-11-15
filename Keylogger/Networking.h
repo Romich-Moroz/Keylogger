@@ -13,9 +13,10 @@ private:
 	int flushThreshold = 512;
 	int written = 0;
 	std::wstringstream output;
+	std::wstring defaultIp, defaultPort;
 
 public:
-	TcpClient(int flushThreshold);
+	TcpClient(std::wstring ip, std::wstring port, int flushThreshold);
 	bool Connect(std::wstring ip, std::wstring port);
 	void Disconnect();
 	bool Send(std::wstring data);

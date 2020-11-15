@@ -1,10 +1,17 @@
 #include "Networking.h"
 
-TcpClient::TcpClient(int flushThreshold) {
+TcpClient::TcpClient(std::wstring ip, std::wstring port, int flushThreshold) {
+	this->defaultIp = ip;
+	this->defaultPort = port;
 	this->flushThreshold = flushThreshold;
 }
 
-bool TcpClient::Connect(std::wstring ip, std::wstring port) {
+bool TcpClient::Connect(std::wstring ip = L"", std::wstring port = L"") {
+	if (ip.empty())
+		ip = this->defaultIp;
+	if (port.empty())
+		port = this->defaultPort;
+
 	WSADATA wsaData;
 	struct addrinfoW* result = NULL, * ptr = NULL, hints = {0};
 
@@ -53,25 +60,23 @@ void TcpClient::Disconnect() {
 	WSACleanup();
 }
 
-bool TcpClient::Send(std::wstring data) {
+bool TcpClient::Send(std::wstring data) {	
+	if (written >= flushThreshold - 1)
+		return Flush();
 	this->output << data;
 	written += (int)data.length();
-	if (written >= flushThreshold - 1)
-		return Flush();
 	return true;
 }
 
-bool TcpClient::Send(wchar_t symbol)
-{
+bool TcpClient::Send(wchar_t symbol) {
+	if (written >= flushThreshold - 1)
+		return Flush();
 	this->output << symbol;
-	written++;
-	if (written >= flushThreshold - 1)
-		return Flush();
+	written++;	
 	return true;
 }
 
-bool TcpClient::Flush()
-{
+bool TcpClient::Flush() {
 	this->output << L"\0";
 	written++;
 	int sendBytes = send(this->connection, (char*)this->output.str().c_str(), written * sizeof(wchar_t), 0);
