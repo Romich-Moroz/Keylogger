@@ -108,8 +108,8 @@ std::wstring GetCurrentDirectory(std::wstring executable) {
 
 int wmain(int argc, wchar_t* argv[]) {
 	if (argc < 4) {
-		std::wcout << "Server address, port and max connection limit are missing" << std::endl;
-		return -1;
+		MessageBox(NULL, L"Pass address, port and max connections limit as params to this executable", NULL, 0);
+		return 0;
 	}
 	std::locale::global(std::locale("ru_RU.UTF-8"));		
 	std::wistringstream ss(argv[3]);

