@@ -74,6 +74,7 @@ static unsigned int _stdcall ClientHandler(void* socket) {
 	while ((bytesRecieved = recv(clientSocket, (char*)buf, wcharFlushThreashold*2, 0)) > 0) {
 		logger.Append(std::wstring((wchar_t*)buf));
 		ZeroMemory(buf, wcharFlushThreashold + 1);
+		std::wcout << L"Recieved data from cliend (id = " << clientSocket << L")" << std::endl;
 	}
 	std::wcout << L"Client (id = " << clientSocket << L") disconnected" << std::endl;
 	closesocket(clientSocket);
@@ -120,7 +121,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	gServerSocket = InitServer(argv[1], argv[2], maxConnections);
 	std::wcout << L"Server running at " << argv[1] << L":" << argv[2] << std::endl;
 
-	HANDLE hConnectionManager = (HANDLE)_beginthreadex(0, 0, ConnectionManager, 0, 0, 0);
+	auto hConnectionManager = (HANDLE)_beginthreadex(0, 0, ConnectionManager, 0, 0, 0);
 	if (hConnectionManager) {
 		std::wstring command;
 		while (true) //command loop

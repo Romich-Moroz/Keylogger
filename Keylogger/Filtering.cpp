@@ -7,8 +7,7 @@ Filter::Filter(std::vector<std::wstring> patterns) {
 	}
 }
 
-void Filter::AddFilter(std::wstring regexPattern)
-{
+void Filter::AddFilter(std::wstring regexPattern) {
 	this->patterns.push_back(std::wregex(regexPattern, std::regex_constants::icase));
 }
 

