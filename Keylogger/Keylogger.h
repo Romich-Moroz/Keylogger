@@ -22,7 +22,6 @@ private:
 	static BYTE states[256];
 
 	static HWND hLastTrackedWindow;
-	static bool titleUpdateRequest;
 	static bool isWorthy;
 	static std::wstring lastTrackedWindowTitle;
 
