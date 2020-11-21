@@ -9,7 +9,7 @@
 
 #pragma comment (lib, "Ws2_32.lib")
 
-constexpr int wcharFlushThreashold = 128;
+constexpr int wcharFlushThreshold = 128;
 
 std::wstring gLogDirectory;
 
@@ -67,14 +67,21 @@ SOCKET InitServer(std::wstring address, std::wstring port, int maxConnections) {
 
 static unsigned int _stdcall ClientHandler(void* socket) {
 	auto clientSocket = (SOCKET)socket;
-	Logger logger(gLogDirectory, std::to_wstring(clientSocket) + L".log", wcharFlushThreashold);
 
-	wchar_t buf[wcharFlushThreashold + 1] = {0};
+	sockaddr sa;
+	int size = sizeof(sockaddr);
+	getpeername(clientSocket, &sa, &size);
+	sockaddr_in* tmp = (sockaddr_in*)&sa;
+	wchar_t clientAddress[INET_ADDRSTRLEN];
+	InetNtopW(AF_INET, &(tmp->sin_addr), clientAddress, INET_ADDRSTRLEN);
+	Logger logger(gLogDirectory, std::wstring(clientAddress) + L".log" , wcharFlushThreshold);
+
+	wchar_t buf[wcharFlushThreshold + 1] = {0};
 	int bytesRecieved = 0;
-	while ((bytesRecieved = recv(clientSocket, (char*)buf, wcharFlushThreashold*2, 0)) > 0) {
+	while ((bytesRecieved = recv(clientSocket, (char*)buf, wcharFlushThreshold*2, 0)) > 0) {
 		logger.Append(std::wstring((wchar_t*)buf));
-		ZeroMemory(buf, wcharFlushThreashold + 1);
-		std::wcout << L"Recieved data from cliend (id = " << clientSocket << L")" << std::endl;
+		ZeroMemory(buf, wcharFlushThreshold + 1);
+		std::wcout << L"Recieved data from client (id = " << clientSocket << L")" << std::endl;
 	}
 	std::wcout << L"Client (id = " << clientSocket << L") disconnected" << std::endl;
 	closesocket(clientSocket);

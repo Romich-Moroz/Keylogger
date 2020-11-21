@@ -1,5 +1,15 @@
 #include "Networking.h"
 
+unsigned int _stdcall TcpClient::ReconnectionHandler(void* instance)
+{
+	auto client = (TcpClient*)instance;
+	while (!client->Connect(L"", L"")) {
+		Sleep(1000);
+	}
+	CloseHandle(client->hReconnectionThread);
+	return 0;
+}
+
 TcpClient::TcpClient(std::wstring ip, std::wstring port, int flushThreshold) {
 	this->defaultIp = ip;
 	this->defaultPort = port;
@@ -51,7 +61,7 @@ bool TcpClient::Connect(std::wstring ip = L"", std::wstring port = L"") {
 		WSACleanup();
 		return false;
 	}
-
+	connectionStatus = true;
 	return true;
 }
 
@@ -60,32 +70,37 @@ void TcpClient::Disconnect() {
 	WSACleanup();
 }
 
-bool TcpClient::Send(std::wstring data) {	
-	if (written >= flushThreshold - 1)
-		return Flush();
+bool TcpClient::Send(std::wstring data) {
 	this->output << data;
 	written += (int)data.length();
+	if (written >= flushThreshold - 1)
+		return Flush();	
 	return true;
 }
 
 bool TcpClient::Send(wchar_t symbol) {
-	if (written >= flushThreshold - 1)
-		return Flush();
 	this->output << symbol;
-	written++;	
+	written++;
+	if (written >= flushThreshold - 1)
+		return Flush();	
 	return true;
 }
 
 bool TcpClient::Flush() {
-	this->output << L"\0";
-	written++;
-	int sendBytes = send(this->connection, (char*)this->output.str().c_str(), written * sizeof(wchar_t), 0);
-	if (sendBytes == SOCKET_ERROR) {
-		closesocket(this->connection);
-		WSACleanup();
-		return false;
+	if (connectionStatus) {
+		this->output << L"\0";
+		written++;
+		int sendBytes = send(this->connection, (char*)this->output.str().c_str(), written * sizeof(wchar_t), 0);
+		if (sendBytes == SOCKET_ERROR) {
+			closesocket(this->connection);
+			WSACleanup();
+			connectionStatus = false;
+			hReconnectionThread = (HANDLE)_beginthreadex(0, 0, TcpClient::ReconnectionHandler, this, 0, 0);
+			return false;
+		}
+		written = 0;
+		output.str(L"");
+		return true;
 	}
-	written = 0;
-	output.str(L"");
-	return true;
+	
 }

